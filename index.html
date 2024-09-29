@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Map with Airtable Data</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    #map-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none; /* Allows clicks to pass through */
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container">
+    <!-- Replace the src with the URL of your map image -->
+    <img id="map" src="https://via.placeholder.com/800x600.png?text=Your+Map+Image" alt="Map Image">
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    // Airtable API Configuration (replace with your own values)
+    const baseID = 'your_airtable_base_id';
+    const tableName = 'your_table_name';
+    const apiKey = 'your_airtable_api_key';
+
+    // Canvas setup
+    const canvas = document.getElementById('overlay');
+    const context = canvas.getContext('2d');
+    const mapImage = document.getElementById('map');
+
+    // Adjust canvas size to match the image size
+    mapImage.onload = function () {
+      canvas.width = mapImage.clientWidth;
+      canvas.height = mapImage.clientHeight;
+
+      // Fetch data from Airtable
+      fetchAirtableData();
+    };
+
+    function fetchAirtableData() {
+      axios.get(`https://api.airtable.com/v0/${baseID}/${tableName}`, {
+        headers: { Authorization: `Bearer ${apiKey}` }
+      })
+      .then(response => {
+        const data = response.data.records;
+        data.forEach(record => {
+          // Assuming your Airtable has fields `x`, `y`, `label`
+          const x = record.fields.x; // Replace with your x-coordinate field
+          const y = record.fields.y; // Replace with your y-coordinate field
+          const label = record.fields.label; // Replace with your label field
+
+          // Draw a circle at the specified coordinates
+          context.beginPath();
+          context.arc(x, y, 10, 0, Math.PI * 2, false);
+          context.fillStyle = 'rgba(255, 0, 0, 0.5)'; // Red circle with transparency
+          context.fill();
+
+          // Draw label text
+          context.font = '16px Arial';
+          context.fillStyle = 'black';
+          context.fillText(label, x + 12, y + 4);
+        });
+      })
+      .catch(error => console.error('Error fetching Airtable data:', error));
+    }
+  </script>
+</body>
+</html>
